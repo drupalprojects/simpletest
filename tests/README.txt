@@ -1,1 +1,0 @@
-These tests belong elsewhere. They should reside with their respective modules. Until this module is accepted into core, some tests will reside here.
