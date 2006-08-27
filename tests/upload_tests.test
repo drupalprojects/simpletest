@@ -386,11 +386,11 @@ class UploadPictureTests extends DrupalTestCase {
 
       // get full url to the user's image
       $picture = file_create_url($pic_path);
-      print "$picture /n";
+
 
       // check if image is displayed in user's profile page
       $content = $this->drupalGetContent();
-            print "$content /n";
+
       $this->assertTrue(strpos($content, $picture), "Image is displayed in user's profile page");
 
       // check if file is located in proper directory
