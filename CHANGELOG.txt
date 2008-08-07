@@ -1,0 +1,14 @@
+// $Id$
+
+SimpleTest 6.x-1.3, xxxx-xx-xx (development version)
+------------------------------
+
+
+SimpleTest 6.x-1.2, 2008-08-05
+------------------------------
+- Removal of all 7.x compatibility feature in favor of 2.x branch.
+
+
+SimpleTest 6.x-1.1, 2008-06-05
+------------------------------
+- First stable release, long overdue.
