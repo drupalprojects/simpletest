@@ -130,15 +130,13 @@ class DrupalTestCase extends WebTestCase {
   function clickLink($label, $index = 0) {
     $url_before = $this->getUrl();
     $urls = $this->_browser->_page->getUrlsByLabel($label);
-    if (count($urls) < $index + 1) {
-      $url_target = 'URL NOT FOUND!';
-    } else {
+    $url_target = 'unknown url';
+    if (isset($urls[$index])) {
       $url_target = $urls[$index]->asString();
     }
-
     $ret = parent::clickLink(t($label), $index);
 
-    $this->assertTrue($ret, ' [browser] clicked link '. t($label) . " ($url_target) from $url_before");
+    $this->assertTrue($ret, str_replace('%', '%%', ' [browser] clicked link '. t($label) . " ($url_target) from $url_before"));
 
     return $ret;
   }
