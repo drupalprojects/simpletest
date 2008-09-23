@@ -138,6 +138,8 @@ class DrupalTestCase extends WebTestCase {
 
     $this->assertTrue($ret, str_replace('%', '%%', ' [browser] clicked link '. t($label) . " ($url_target) from $url_before"));
 
+    $this->_content = $this->_browser->getContent();
+
     return $ret;
   }
 
