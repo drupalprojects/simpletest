@@ -219,30 +219,29 @@ function simpletest_run_tests($testlist = NULL, $reporter = 'drupal') {
   if (!$test_running) {
     $test_running = TRUE;
     $test = simpletest_get_total_test($testlist);
-    switch ($reporter) {
-      case 'text':
-        $reporter = &new TextReporter();
-        break;
-      case 'xml':
-        $reporter = &new XMLReporter();
-        break;
-      case 'html':
-        $reporter = &new HtmlReporter();
-        break;
-      case 'drupal':
-        $reporter = &new DrupalReporter();
-        break;
+    if (gettype($reporter) == 'string') {
+      switch ($reporter) {
+    	case 'text':
+          $reporter = &new TextReporter();
+          break;
+      	case 'xml':
+          $reporter = &new XMLReporter();
+          break;
+        case 'html':
+          $reporter = &new HtmlReporter();
+          break;
+        case 'drupal':
+          $reporter = &new DrupalReporter();
+          break;
+      }
     }
     
     cache_clear_all();
     $results = $test->run($reporter);
-
+     
     switch (get_class($reporter)) {
-      case 'TextReporter':
-        exit ($results ? 0 : 1);
-      case 'XMLReporter':
-      case 'HtmlReporter':
-        break;
+      default:
+        return $results;
       case 'DrupalReporter':
         return $reporter->getOutput();
     }
