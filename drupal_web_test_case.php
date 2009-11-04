@@ -532,7 +532,7 @@ class DrupalUnitTestCase extends DrupalTestCase {
     $this->skipClasses[__CLASS__] = TRUE;
   }
 
-  function setUp() {
+  function setUp(array $modules = array()) {
     global $db_prefix, $conf;
 
     // Store necessary current values before switching to prefixed database.
@@ -1025,7 +1025,7 @@ class DrupalWebTestCase extends DrupalTestCase {
    * @param ...
    *   List of modules to enable for the duration of the test.
    */
-  protected function setUp() {
+  protected function setUp(array $modules = array()) {
     global $db_prefix, $user, $language;
 
     // Store necessary current values before switching to prefixed database.
@@ -1070,7 +1070,6 @@ class DrupalWebTestCase extends DrupalTestCase {
 
     // Install additional modules one at a time in order to make sure that the
     // list of modules is updated between each module's installation.
-    $modules = func_get_args();
     foreach ($modules as $module) {
       drupal_install_modules(array($module), TRUE);
     }
