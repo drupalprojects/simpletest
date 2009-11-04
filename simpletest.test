@@ -26,7 +26,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
 
   function setUp() {
     if (!$this->inCURL()) {
-      parent::setUp('simpletest');
+      parent::setUp(array('simpletest'));
 
       // Create and login user
       $admin_user = $this->drupalCreateUser(array('administer unit tests'));
