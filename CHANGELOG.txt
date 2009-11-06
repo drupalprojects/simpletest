@@ -1,0 +1,8 @@
+// $Id$
+
+SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
+------------------------------
+- Changes:
+   * #610072: setUp() function accepting array as arguments.
+   * #610072: followup.
+   * #550752: Detect cache our of sync with code on test list select.

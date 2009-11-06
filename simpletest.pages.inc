@@ -46,7 +46,7 @@ function simpletest_test_form($form) {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Clean test environment'),
-    '#description' => t('Remove tables with the prefix "simpletest" and temporary directories that are left over from tests that crashed. This is intended for developers when creating tests.'),
+    '#description' => t('Remove tables with the prefix "simpletest", temporary directories that are left over from tests that crashed, and clears the test list cache. This is intended for developers when creating tests.'),
   );
   $form['clean']['op'] = array(
     '#type' => 'submit',
@@ -184,11 +184,21 @@ function _simpletest_sort_by_title($a, $b) {
 function simpletest_test_form_submit($form, &$form_state) {
   // Get list of tests.
   $tests_list = array();
+  $not_found = FALSE;
   foreach ($form_state['values'] as $class_name => $value) {
     if (class_exists($class_name) && $value === 1) {
       $tests_list[] = $class_name;
     }
+    else {
+      $not_found = TRUE;
+    }
   }
+
+  if ($not_found) {
+    drupal_flush_all_caches();
+    drupal_set_message(t('One or more of the test classes was not found. The cache has been cleared to correct the issue.'), 'error');
+  }
+
   if (count($tests_list) > 0 ) {
     simpletest_run_tests($tests_list, 'drupal');
   }
