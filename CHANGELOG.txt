@@ -7,3 +7,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * #610072: followup.
    * #550752: Detect cache our of sync with code on test list select.
    * Remove version attribute form .info file.
+   * Place hook_schema() first in .install.
