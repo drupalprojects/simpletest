@@ -2,7 +2,6 @@
 name = Testing
 description = Provides a framework for unit and functional testing.
 package = Core
-version = VERSION
 core = 7.x
 files[] = simpletest.module
 files[] = simpletest.pages.inc
