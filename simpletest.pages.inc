@@ -441,6 +441,12 @@ function simpletest_settings_form($form, &$form_state) {
     '#description' => t('By default SimpleTest will clear the results after they have been viewed on the results page, but in some cases it may be useful to leave the results in the database. The results can then be viewed at <em>admin/config/development/testing/[test_id]</em>. The test ID can be found in the database, simpletest table, or kept track of when viewing the results the first time. Additionally, some modules may provide more analaysis or features that require this setting to be disabled.'),
     '#default_value' => variable_get('simpletest_clear_results', TRUE),
   );
+  $form['general']['simpletest_remove_tables'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Remove prefixed tables after each complete test suite run'),
+    '#description' => t('By default SimpleTest will remove the prefixed tables created during testing, but in some cases it may be useful to leave the tables in the database.'),
+    '#default_value' => variable_get('simpletest_remove_tables', TRUE),
+  );
   $form['general']['simpletest_verbose'] = array(
     '#type' => 'checkbox',
     '#title' => t('Provide verbose information when running tests'),

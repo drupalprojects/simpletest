@@ -1034,6 +1034,7 @@ class DrupalWebTestCase extends DrupalTestCase {
     $this->originalPrefix = $db_prefix;
     $this->originalFileDirectory = file_directory_path();
     $this->originalProfile = drupal_get_profile();
+    $this->removeTables = variable_get('simpletest_remove_tables', TRUE);
     $clean_url_original = variable_get('clean_url', 0);
 
     // Generate temporary prefixed database to ensure that tests have a clean starting point.
@@ -1176,11 +1177,12 @@ class DrupalWebTestCase extends DrupalTestCase {
       // Delete temporary files directory.
       file_unmanaged_delete_recursive($this->originalFileDirectory . '/' . $db_prefix);
 
-      // Remove all prefixed tables (all the tables in the schema).
-      $schema = drupal_get_schema(NULL, TRUE);
-      $ret = array();
-      foreach ($schema as $name => $table) {
-        db_drop_table($name);
+      if ($this->removeTables) {
+        // Remove all prefixed tables (all the tables in the schema).
+        $schema = drupal_get_schema(NULL, TRUE);
+        foreach ($schema as $name => $table) {
+          db_drop_table($name);
+        }
       }
 
       // Return the database prefix to the original.
