@@ -10,3 +10,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Place hook_schema() first in .install.
    * #588084: Provide a mechanism for leaving prefix tables.
    * Add API.txt to document API changes.
+   * Add variable delete for 'simpletest_remove_tables'.

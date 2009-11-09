@@ -202,6 +202,7 @@ function simpletest_uninstall() {
   variable_del('simpletest_username');
   variable_del('simpletest_password');
   variable_del('simpletest_clear_results');
+  variable_del('simpletest_remove_tables');
   variable_del('simpletest_verbose');
 
   // Remove generated files.
