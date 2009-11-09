@@ -9,3 +9,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Remove version attribute form .info file.
    * Place hook_schema() first in .install.
    * #588084: Provide a mechanism for leaving prefix tables.
+   * Add API.txt to document API changes.
