@@ -12,7 +12,7 @@
 function simpletest_test_form($form) {
   $form['tests'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Tests'),
+    '#title' => t('2.x compatible tests'),
     '#description' => t('Select the test(s) or test group(s) you would like to run, and click <em>Run tests</em>.'),
   );
 
