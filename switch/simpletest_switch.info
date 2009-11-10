@@ -1,0 +1,8 @@
+; $Id$
+
+name = Testing switch
+description = Provides an easy method to switch between 1.x and 2.x testing APIs.
+package = Testing
+core = 7.x
+files[] = simpletest_switch.module
+dependencies[] = simpletest

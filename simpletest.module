@@ -36,6 +36,7 @@ function simpletest_menu() {
   $items['admin/config/development/testing/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
   );
   $items['admin/config/development/testing/settings'] = array(
     'title' => 'Settings',
@@ -44,6 +45,7 @@ function simpletest_menu() {
     'access arguments' => array('administer unit tests'),
     'type' => MENU_LOCAL_TASK,
     'file' => 'simpletest.pages.inc',
+    'weight' => -9,
   );
   $items['admin/config/development/testing/results/%'] = array(
     'title' => 'Test result',

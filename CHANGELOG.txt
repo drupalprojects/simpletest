@@ -13,3 +13,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Add variable delete for 'simpletest_remove_tables'.
    * Remove core tests since 7.x-2.x is not going to maintain them.
    * Added check for 2.x compatible tests.
+   * Add testing API switching mechanism.
