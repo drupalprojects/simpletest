@@ -9,4 +9,4 @@ files[] = simpletest.pages.inc
 files[] = simpletest.install
 files[] = simpletest.test
 files[] = drupal_web_test_case.php
-dependencies[] = browser (7.x-1.x-dev)
+testing_api = 2.x
