@@ -14,3 +14,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Remove core tests since 7.x-2.x is not going to maintain them.
    * Added check for 2.x compatible tests.
    * Add testing API switching mechanism.
+   * Cleanup non 2.x compatible test file removal.

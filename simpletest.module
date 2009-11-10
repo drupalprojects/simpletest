@@ -336,21 +336,12 @@ function simpletest_test_get_all() {
     }
     else {
       // Select all clases in files ending with .test.
-      $classes = db_query("SELECT r.name, r.module, s.info
-                           FROM {registry} r
-                           JOIN {system} s
-                             ON r.module = s.name
-                           WHERE r.type = :type
-                           AND r.filename LIKE :name", array(':type' => 'class', ':name' => '%.test'));
+      $classes = db_query("SELECT name FROM {registry} WHERE type = :type AND filename LIKE :name", array(':type' => 'class', ':name' => '%.test'));
 
       // Check that each class has a getInfo() method and store the information
       // in an array keyed with the group specified in the test information.
       $groups = array();
       foreach ($classes as $class) {
-        if (!simpletest_test_get_all_api_check($class->module, $class->info)) {
-          continue;
-        }
-
         $class = $class->name;
         // Test classes need to implement getInfo() to be valid.
         if (class_exists($class) && method_exists($class, 'getInfo')) {
@@ -382,27 +373,6 @@ function simpletest_test_get_all() {
 }
 
 /**
- * Ensure that tests provided by this module follow the 2.x testing API.
- *
- * @param $module
- *   Module name.
- * @param $info
- *   Serialized module info.
- * @return
- *   TRUE if module provided 2.x compatible tests, otherwise FALSE.
- */
-function simpletest_test_get_all_api_check($module, $info) {
-  static $modules = array();
-
-  if (!isset($modules[$module])) {
-    $info = unserialize($info);
-    $modules[$module] = !empty($info['testing_api']) && $info['testing_api'] == '2.x';
-  }
-
-  return $modules[$module];
-}
-
-/**
  * Implementation of hook_registry_files_alter().
  *
  * Add the test files for disabled modules so that we get a list containing
@@ -410,15 +380,28 @@ function simpletest_test_get_all_api_check($module, $info) {
  */
 function simpletest_registry_files_alter(&$files, $modules) {
   foreach ($modules as $module) {
+    if (empty($module->info['files'])) {
+      continue;
+    }
+
+    $dir = $module->dir;
+
     // Only add test files for disabled modules, as enabled modules should
     // already include any test files they provide.
-    if (!$module->status) {
-      $dir = $module->dir;
-      if (!empty($module->info['files'])) {
+    if (!empty($module->info['testing_api']) && $module->info['testing_api'] == '2.x') {
+      if (!$module->status) {
         foreach ($module->info['files'] as $file) {
           if (substr($file, -5) == '.test') {
             $files["$dir/$file"] = array('module' => $module->name, 'weight' => $module->weight);
           }
+        }
+      }
+    }
+    else {
+      // Remove non 2.x compatible test.
+      foreach ($module->info['files'] as $file) {
+        if (substr($file, -5) == '.test') {
+          unset($files["$dir/$file"]);
         }
       }
     }
