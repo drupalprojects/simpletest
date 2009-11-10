@@ -398,7 +398,7 @@ function simpletest_registry_files_alter(&$files, $modules) {
       }
     }
     else {
-      // Remove non 2.x compatible test.
+      // Remove non 2.x compatible test files.
       foreach ($module->info['files'] as $file) {
         if (substr($file, -5) == '.test') {
           unset($files["$dir/$file"]);

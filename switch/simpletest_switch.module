@@ -97,6 +97,20 @@ function simpletest_switch_registry_files_alter(&$files, $modules) {
         unset($files[$key]);
       }
     }
+
+    // Remove 2.x compatible test files.
+    foreach ($modules as $module) {
+      if (!empty($module->info['files'])) {
+        if (!empty($module->info['testing_api']) && $module->info['testing_api'] == '2.x') {
+          $dir = $module->dir;
+          foreach ($module->info['files'] as $file) {
+            if (substr($file, -5) == '.test') {
+              unset($files["$dir/$file"]);
+            }
+          }
+        }
+      }
+    }
   }
 }
 
