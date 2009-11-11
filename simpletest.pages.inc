@@ -249,7 +249,7 @@ function simpletest_result_form($form, &$form_state, $test_id) {
     $info = call_user_func(array($group, 'getInfo'));
     $form['result']['results'][$group] = array(
       '#type' => 'fieldset',
-      '#title' => $info['name'],
+      '#title' => $info['group'] . ': ' . $info['name'],
       '#description' => $info['description'],
       '#collapsible' => TRUE,
     );

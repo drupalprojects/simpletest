@@ -17,3 +17,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Cleanup non 2.x compatible test file removal.
    * Remove 2.x compatible tests when in 1.x mode.
    * Add testing API 2.x flag to simpletest.info.
+   * Add group to fieldset title when displaying results.
