@@ -2,6 +2,7 @@
 // $Id$
 
 class SimpleTestFunctionalTest extends DrupalWebTestCase {
+
   /**
    * The results array that has been parsed by getTestResults().
    */
@@ -24,7 +25,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
     );
   }
 
-  function setUp() {
+  protected function setUp() {
     if (!$this->inCURL()) {
       parent::setUp(array('simpletest'));
 
@@ -40,7 +41,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
    * Test the internal browsers functionality.
    */
-  function testInternalBrowser() {
+  protected function testInternalBrowser() {
     global $conf;
     if (!$this->inCURL()) {
       $this->drupalGet('node');
@@ -69,7 +70,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
    * Make sure that tests selected through the web interface are run and
    * that the results are displayed correctly.
    */
-  function testWebTestRunner() {
+  protected function testWebTestRunner() {
     $this->pass = t('SimpleTest pass.');
     $this->fail = t('SimpleTest fail.');
     $this->valid_permission = 'access content';
@@ -104,7 +105,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
    * Test to be run and the results confirmed.
    */
-  function stubTest() {
+  protected function stubTest() {
     $this->pass($this->pass);
     $this->fail($this->fail);
 
@@ -128,14 +129,14 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
    * Assert nothing.
    */
-  function assertNothing() {
+  protected function assertNothing() {
     $this->pass("This is nothing.");
   }
 
   /**
    * Confirm that the stub test produced the desired results.
    */
-  function confirmStubTestResults() {
+  protected function confirmStubTestResults() {
     $this->assertAssertion($this->pass, 'Other', 'Pass', 'simpletest.test', 'SimpleTestFunctionalTest->stubTest()');
     $this->assertAssertion($this->fail, 'Other', 'Fail', 'simpletest.test', 'SimpleTestFunctionalTest->stubTest()');
 
@@ -164,7 +165,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
    * Fetch the test id from the test results.
    */
-  function getTestIdFromResults() {
+  protected function getTestIdFromResults() {
     foreach ($this->childTestResults['assertions'] as $assertion) {
       if (preg_match('@^Test ID is ([0-9]*)\.$@', $assertion['message'], $matches)) {
         return $matches[1];
@@ -184,7 +185,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
    * @param string $functuion Function where the assertion originated.
    * @return Assertion result.
    */
-  function assertAssertion($message, $type, $status, $file, $function) {
+  protected function assertAssertion($message, $type, $status, $file, $function) {
     $message = trim(strip_tags($message));
     $found = FALSE;
     foreach ($this->childTestResults['assertions'] as $assertion) {
@@ -203,7 +204,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
   /**
    * Get the results from a test and store them in the class array $results.
    */
-  function getTestResults() {
+  protected function getTestResults() {
     $results = array();
     if ($this->parse()) {
       if ($fieldset = $this->getResultFieldSet()) {
@@ -234,7 +235,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
    *
    * @return fieldset containing the results for group this test is in.
    */
-  function getResultFieldSet() {
+  protected function getResultFieldSet() {
     $fieldsets = $this->xpath('//fieldset');
     $info = $this->getInfo();
     foreach ($fieldsets as $fieldset) {
@@ -253,7 +254,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
    * @return
    *   Extracted text.
    */
-  function asText(SimpleXMLElement $element) {
+  protected function asText(SimpleXMLElement $element) {
     if (!is_object($element)) {
       return $this->fail('The element is not an element.');
     }
@@ -265,7 +266,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
    *
    * @return The test is being run from inside a CURL request.
    */
-  function inCURL() {
+  protected function inCURL() {
     return isset($_SERVER['HTTP_USER_AGENT']) && preg_match("/^simpletest\d+/", $_SERVER['HTTP_USER_AGENT']);
   }
 }
@@ -274,6 +275,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
  * Test internal testing framework URL handling.
  */
 class SimpleTestURLTestCase extends DrupalWebTestCase {
+
   public static function getInfo() {
     return array(
       'name' => 'SimpleTest URL handling',
@@ -285,7 +287,7 @@ class SimpleTestURLTestCase extends DrupalWebTestCase {
   /**
    * Test DrupalWebTestCase::getAbsoluteUrl().
    */
-  function testGetAbsoluteUrl() {
+  protected function testGetAbsoluteUrl() {
     // Testbed runs with Clean URLs disabled, so disable it here.
     variable_set('clean_url', 0);
     $url = 'user/login';
@@ -308,9 +310,7 @@ class SimpleTestURLTestCase extends DrupalWebTestCase {
 }
 
 class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
-  /**
-   * Implement getInfo().
-   */
+
   public static function getInfo() {
     return array(
       'name' => 'SimpleTest e-mail capturing',
@@ -322,7 +322,7 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
   /**
    * Test to see if the wrapper function is executed correctly.
    */
-  function testMailSend() {
+  protected function testMailSend() {
     // Create an e-mail.
     $subject = $this->randomString(64);
     $body = $this->randomString(128);
@@ -387,6 +387,7 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
  * Test required modules for tests.
  */
 class SimpleTestMissingDependentModuleUnitTest extends DrupalUnitTestCase {
+
   public static function getInfo() {
     return array(
       'title' => 'Testing dependent module test',
@@ -399,7 +400,7 @@ class SimpleTestMissingDependentModuleUnitTest extends DrupalUnitTestCase {
   /**
    * Ensure that this test will not be loaded despite its dependency.
    */
-  function testFail() {
+  protected function testFail() {
     $this->fail(t('Running test with missing required module.'));
   }
 }
