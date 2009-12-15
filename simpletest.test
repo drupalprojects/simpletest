@@ -1,6 +1,11 @@
 <?php
 // $Id$
 
+/**
+ * @file
+ * Provides tests for SimpleTest functionality.
+ */
+
 class SimpleTestFunctionalTest extends DrupalWebTestCase {
 
   /**

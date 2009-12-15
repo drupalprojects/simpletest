@@ -2,6 +2,11 @@
 // $Id$
 
 /**
+ * @file
+ * Provides DrupalTestCase, DrupalUnitTestCase, and DrupalWebTestCase classes.
+ */
+
+/**
  * Base class for Drupal tests.
  *
  * Do not extend this class, use one of the subclasses in this file.
