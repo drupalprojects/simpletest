@@ -21,12 +21,9 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'SimpleTest functionality',
-      'description' => 'Test SimpleTest\'s web interface: check that the intended tests were
-                          run and ensure that test reports display the intended results. Also
-                          test SimpleTest\'s internal browser and API\'s both explicitly and
-                          implicitly.',
-      'group' => 'SimpleTest'
+      'name' => 'Web runner',
+      'description' => 'Test SimpleTest\'s web interface: check that the intended tests were run and ensure that test reports display the intended results. Also test SimpleTest\'s internal browser and API\'s both explicitly and implicitly.',
+      'group' => 'SimpleTest',
     );
   }
 
@@ -283,7 +280,7 @@ class SimpleTestURLTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'SimpleTest URL handling',
+      'name' => 'URL handling',
       'description' => 'Test the URL handling in the testing framework.',
       'group' => 'SimpleTest',
     );
@@ -318,7 +315,7 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
 
   public static function getInfo() {
     return array(
-      'name' => 'SimpleTest e-mail capturing',
+      'name' => 'E-mail capturing',
       'description' => 'Test the SimpleTest e-mail capturing logic, the assertMail assertion and the drupalGetMails function.',
       'group' => 'SimpleTest',
     );
@@ -395,7 +392,7 @@ class SimpleTestMissingDependentModuleUnitTest extends DrupalUnitTestCase {
 
   public static function getInfo() {
     return array(
-      'title' => 'Testing dependent module test',
+      'title' => 'Dependent module test',
       'description' => 'This test should not load since it requires a module that is not found.',
       'group' => 'SimpleTest',
       'dependencies' => array('simpletest_missing_module'),
@@ -409,4 +406,3 @@ class SimpleTestMissingDependentModuleUnitTest extends DrupalUnitTestCase {
     $this->fail(t('Running test with missing required module.'));
   }
 }
-
