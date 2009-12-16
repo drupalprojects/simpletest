@@ -18,3 +18,11 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Remove 2.x compatible tests when in 1.x mode.
    * Add testing API 2.x flag to simpletest.info.
    * Add group to fieldset title when displaying results.
+   * Formatting and method scope additions.
+   * Add file documentation.
+   * Re-roll patch.
+   * When finding the test result fieldset include the test group.
+   * Cleanup test info.
+   * Merge changes from Drupal 7 core.
+   * Make alert() message more logical.
+   * Post merge fix.
