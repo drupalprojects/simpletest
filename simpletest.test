@@ -244,7 +244,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
     $fieldsets = $this->xpath('//fieldset');
     $info = $this->getInfo();
     foreach ($fieldsets as $fieldset) {
-      if ($this->asText($fieldset->legend) == $info['name']) {
+      if ($this->asText($fieldset->legend) == $info['group'] . ': ' . $info['name']) {
         return $fieldset;
       }
     }
