@@ -9,4 +9,6 @@ files[] = simpletest.pages.inc
 files[] = simpletest.install
 files[] = simpletest.test
 files[] = drupal_web_test_case.php
+configure = admin/config/development/testing/settings
+
 testing_api = 2.x

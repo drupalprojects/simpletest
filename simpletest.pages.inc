@@ -46,7 +46,7 @@ function simpletest_test_form($form) {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#title' => t('Clean test environment'),
-    '#description' => t('Remove tables with the prefix "simpletest", temporary directories that are left over from tests that crashed, and clears the test list cache. This is intended for developers when creating tests.'),
+    '#description' => t('Remove tables with the prefix "simpletest" and temporary directories that are left over from tests that crashed. This is intended for developers when creating tests.'),
   );
   $form['clean']['op'] = array(
     '#type' => 'submit',
@@ -329,7 +329,9 @@ function simpletest_result_form($form, &$form_state, $test_id) {
   );
 
   $form['action']['return'] = array(
-    '#markup' => l(t('Return to list'), 'admin/config/development/testing'),
+    '#type' => 'link',
+    '#title' => t('Return to list'),
+    '#href' => 'admin/config/development/testing',
   );
 
   if (is_numeric($test_id)) {
