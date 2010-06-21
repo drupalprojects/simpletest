@@ -1160,7 +1160,7 @@ class DrupalWebTestCase extends DrupalTestCase {
     $conf = array();
     drupal_static_reset();
 
-    $this->setUpInstall(function_get_args());
+    $this->setUpInstall(func_get_args());
 
     // Rebuild caches.
     drupal_static_reset();
