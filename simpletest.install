@@ -19,6 +19,7 @@ function simpletest_uninstall() {
   variable_del('simpletest_clear_results');
   variable_del('simpletest_remove_tables');
   variable_del('simpletest_verbose');
+  variable_del('simpletest_remote_url');
 
   // Remove generated files.
   $path = file_directory_path() . '/simpletest';

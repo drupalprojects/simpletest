@@ -27,3 +27,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Make alert() message more logical.
    * Post merge fix.
    * Modified versions of #666956 and #758662.
+   * Add setting field for remote_url and change all working from staging to remote.

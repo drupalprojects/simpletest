@@ -3070,7 +3070,7 @@ class DrupalCloneTestCase extends DrupalWebTestCase {
 }
 
 /**
- * Base class used for writing atomic staging tests.
+ * Base class used for writing atomic remote tests.
  *
  * The test cases are written in such a way that they can be run against a
  * staging or live environment and will clean up after themselves by reverting
@@ -3085,31 +3085,30 @@ class DrupalCloneTestCase extends DrupalWebTestCase {
  * protected function revertLogin();
  * </code>
  *
- * When the variable 'simpletest_staging_url' is set the setUp() and tearDown()
- * methods will not create an environment, but instead direct the internal
- * browser to the staging URL. The tests will then against the specified URL
+ * The setUp() and tearDown() methods will not create an environment, but
+ * instead direct the internal browser to the remote URL,
+ * 'simpletest_remote_url'. The tests will be run against the specified URL
  * instead of the local machine.
  *
- * The test can also be run against a standard development environment just as
- * and other test using the DrupalCloneTestCase. If the staging ULR is not
- * specified the test will attempt to clone the local development database and
- * perform the actions against it.
+ * The test can also be run against the local development environment by
+ * leaving the variable blank. If not specified the remote URL will be filled
+ * with the local environment's URL.
  */
-class DrupalStageTestCase extends DrupalWebTestCase {
+class DrupalRemoteTestCase extends DrupalWebTestCase {
 
   /**
-   * URL variables that need to be changed when running against staging.
+   * URL variables that need to be changed when running against remote server.
    *
    * @var array
    */
   protected static $URL_VARIABLES = array('base_url', 'base_secure_url', 'base_insecure_url');
 
   /**
-   * URL of the staging server if specified, otherwise FALSE.
+   * URL of the remote server.
    *
    * @var string
    */
-  protected $stagingUrl;
+  protected $remoteUrl;
 
   /**
    * Associative array of original values for the URL variables.
@@ -3126,16 +3125,16 @@ class DrupalStageTestCase extends DrupalWebTestCase {
   protected $actions = array();
 
   /**
-   * Determine when to run against staging or clone environment.
+   * Determine when to run against remote environment.
    */
   protected function setUp() {
-    if (!($this->stagingUrl = variable_get('simpletest_staging_url', FALSE))) {
-      $this->stagingUrl = url('', array('absolute' => TRUE));
+    if (!($this->remoteUrl = variable_get('simpletest_remote_url', FALSE))) {
+      $this->remoteUrl = url('', array('absolute' => TRUE));
     }
     // Point the internal browser to the staging site.
     foreach (self::$URL_VARIABLES as $variable) {
       $this->originalUrls[$variable] = $GLOBALS[$variable];
-      $GLOBALS[$variable] = $this->stagingUrl;
+      $GLOBALS[$variable] = $this->remoteUrl;
     }
     $GLOBALS['base_secure_url'] = str_replace('http://', 'https://', $GLOBALS['base_secure_url']);
 
@@ -3189,7 +3188,7 @@ class DrupalStageTestCase extends DrupalWebTestCase {
    * Temporarily revert the global URL variables so verbose links will print.
    */
   protected function verbose($message) {
-    if ($this->stagingUrl) {
+    if ($this->remoteUrl) {
       foreach (self::$URL_VARIABLES as $variable) {
         $GLOBALS[$variable] = $this->originalUrls[$variable];
       }
@@ -3197,9 +3196,9 @@ class DrupalStageTestCase extends DrupalWebTestCase {
 
     parent::verbose($message);
 
-    if ($this->stagingUrl) {
+    if ($this->remoteUrl) {
       foreach (self::$URL_VARIABLES as $variable) {
-        $GLOBALS[$variable] = $this->stagingUrl;
+        $GLOBALS[$variable] = $this->remoteUrl;
       }
       $GLOBALS['base_secure_url'] = str_replace('http://', 'https://', $GLOBALS['base_secure_url']);
     }

@@ -494,6 +494,19 @@ function simpletest_settings_form($form, &$form_state) {
     '#title' => t('Password'),
     '#default_value' => variable_get('simpletest_httpauth_password', ''),
   );
+  $form['remote'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Remote'),
+    '#description' => t('Settings related to remote testing.'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['remote']['simpletest_remote_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('URL'),
+    '#description' => t('Remote URL to perform testing against, leave blank for local url.'),
+    '#default_value' => variable_get('simpletest_remote_url', ''),
+  );
 
   return system_settings_form($form);
 }
