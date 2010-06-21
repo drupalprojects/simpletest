@@ -1160,37 +1160,7 @@ class DrupalWebTestCase extends DrupalTestCase {
     $conf = array();
     drupal_static_reset();
 
-    include_once DRUPAL_ROOT . '/includes/install.inc';
-    drupal_install_system();
-
-    $this->preloadRegistry();
-
-    // Set path variables.
-    variable_set('file_public_path', $public_files_directory);
-    variable_set('file_private_path', $private_files_directory);
-    variable_set('file_temporary_path', $temp_files_directory);
-
-    // Include the default profile.
-    variable_set('install_profile', 'standard');
-    $profile_details = install_profile_info('standard', 'en');
-
-    // Install the modules specified by the default profile.
-    module_enable($profile_details['dependencies'], FALSE);
-
-    // Install modules needed for this test. This could have been passed in as
-    // either a single array argument or a variable number of string arguments.
-    // @todo Remove this compatibility layer in Drupal 8, and only accept
-    // $modules as a single array argument.
-    $modules = func_get_args();
-    if (isset($modules[0]) && is_array($modules[0])) {
-      $modules = $modules[0];
-    }
-    if ($modules) {
-      module_enable($modules, TRUE);
-    }
-
-    // Run default profile tasks.
-    module_enable(array('standard'), FALSE);
+    $this->setUpInstall(function_get_args());
 
     // Rebuild caches.
     drupal_static_reset();
@@ -1215,11 +1185,8 @@ class DrupalWebTestCase extends DrupalTestCase {
     drupal_save_session(FALSE);
     $user = user_load(1);
 
-    // Restore necessary variables.
-    variable_set('install_task', 'done');
-    variable_set('clean_url', $clean_url_original);
-    variable_set('site_mail', 'simpletest@example.com');
-    variable_set('date_default_timezone', date_default_timezone_get());
+    $this->setUpVariables($clean_url_original);
+
     // Set up English language.
     unset($GLOBALS['conf']['language_default']);
     $language = language_default();
@@ -1228,6 +1195,53 @@ class DrupalWebTestCase extends DrupalTestCase {
     variable_set('mail_system', array('default-system' => 'TestingMailSystem'));
 
     drupal_set_time_limit($this->timeLimit);
+  }
+
+  /**
+   * Perform Drupal installation.
+   */
+  protected function setUpInstall(array $modules) {
+    include_once DRUPAL_ROOT . '/includes/install.inc';
+    drupal_install_system();
+
+    $this->preloadRegistry();
+
+    // Set path variables.
+    variable_set('file_public_path', $public_files_directory);
+    variable_set('file_private_path', $private_files_directory);
+    variable_set('file_temporary_path', $temp_files_directory);
+
+    // Include the default profile.
+    variable_set('install_profile', 'standard');
+    $profile_details = install_profile_info('standard', 'en');
+
+    // Install the modules specified by the default profile.
+    module_enable($profile_details['dependencies'], FALSE);
+
+    // Install modules needed for this test. This could have been passed in as
+    // either a single array argument or a variable number of string arguments.
+    // @todo Remove this compatibility layer in Drupal 8, and only accept
+    // $modules as a single array argument.
+    if (isset($modules[0]) && is_array($modules[0])) {
+      $modules = $modules[0];
+    }
+    if ($modules) {
+      module_enable($modules, TRUE);
+    }
+
+    // Run default profile tasks.
+    module_enable(array('standard'), FALSE);
+  }
+
+  /**
+   * Set post-installation variables.
+   */
+  protected function setUpVariables($clean_url_original) {
+    // Restore necessary variables.
+    variable_set('install_task', 'done');
+    variable_set('clean_url', $clean_url_original);
+    variable_set('site_mail', 'simpletest@example.com');
+    variable_set('date_default_timezone', date_default_timezone_get());
   }
 
   /**
@@ -2979,6 +2993,217 @@ class DrupalWebTestCase extends DrupalTestCase {
     }
   }
 
+}
+
+
+/**
+ * Clone an existing database and use it for testing.
+ */
+class DrupalCloneTestCase extends DrupalWebTestCase {
+
+  /**
+   * Tables to exlude during data cloning, only their structure will be cloned.
+   *
+   * @var array
+   */
+  protected $excludeTables = array(
+    'cache',
+    'cache_block',
+    'cache_bootstrap',
+    'cache_field',
+    'cache_filter',
+    'cache_form',
+    'cache_image',
+    'cache_menu',
+    'cache_page',
+    'cache_path',
+    'cache_update',
+    'watchdog',
+  );
+
+  protected function setUpInstall() {
+    global $db_prefix;
+
+    // Store new database prefix.
+    $db_prefix_new = $db_prefix;
+    $db_prefix = $this->originalPrefix;
+
+    // Rebuild schema based on prefixed database and such.
+    $schemas = drupal_get_schema(NULL, TRUE);
+    // Create a list of prefixed source table names.
+    $sources = array();
+    foreach ($schemas as $name => $schema) {
+      $sources[$name] = Database::getConnection()->prefixTables('{' . $name . '}');
+    }
+
+    // Return to new prefix before performing cloning.
+    $db_prefix = $db_prefix_new;
+
+    // Clone each table into the new database.
+    foreach ($schemas as $name => $schema) {
+      $this->cloneTable($name, $sources[$name], $schema);
+    }
+  }
+
+  protected function setUpVariables() {
+    // Do nothing.
+  }
+
+  /**
+   * Clone an existing table structure and data.
+   *
+   * @param $name
+   *   Table name.
+   * @param $source
+   *   Source table name.
+   * @param $schema
+   *   A Schema API definition array.
+   */
+  protected function cloneTable($name, $source, $schema) {
+    db_create_table($name, $schema);
+
+    $target = Database::getConnection()->prefixTables('{' . $name . '}');
+    if (!in_array($name, $this->excludeTables)) {
+      db_query('INSERT INTO ' . $target . ' SELECT * FROM ' . $source);
+    }
+  }
+}
+
+/**
+ * Base class used for writing atomic staging tests.
+ *
+ * The test cases are written in such a way that they can be run against a
+ * staging or live environment and will clean up after themselves by reverting
+ * all peformed actions. The tests should be performed through a set of actions
+ * defined in the test method. For example:
+ * <code>
+ * protected function testFoo() {
+ *   $this->actions[] = 'login';
+ * }
+ *
+ * protected function performLogin();
+ * protected function revertLogin();
+ * </code>
+ *
+ * When the variable 'simpletest_staging_url' is set the setUp() and tearDown()
+ * methods will not create an environment, but instead direct the internal
+ * browser to the staging URL. The tests will then against the specified URL
+ * instead of the local machine.
+ *
+ * The test can also be run against a standard development environment just as
+ * and other test using the DrupalCloneTestCase. If the staging ULR is not
+ * specified the test will attempt to clone the local development database and
+ * perform the actions against it.
+ */
+class DrupalStageTestCase extends DrupalWebTestCase {
+
+  /**
+   * URL variables that need to be changed when running against staging.
+   *
+   * @var array
+   */
+  protected static $URL_VARIABLES = array('base_url', 'base_secure_url', 'base_insecure_url');
+
+  /**
+   * URL of the staging server if specified, otherwise FALSE.
+   *
+   * @var string
+   */
+  protected $stagingUrl;
+
+  /**
+   * Associative array of original values for the URL variables.
+   *
+   * @var array
+   */
+  protected $originalUrls = array();
+
+  /**
+   * List of actions to perform.
+   *
+   * @var array
+   */
+  protected $actions = array();
+
+  /**
+   * Determine when to run against staging or clone environment.
+   */
+  protected function setUp() {
+    if (!($this->stagingUrl = variable_get('simpletest_staging_url', FALSE))) {
+      $this->stagingUrl = url('', array('absolute' => TRUE));
+    }
+    // Point the internal browser to the staging site.
+    foreach (self::$URL_VARIABLES as $variable) {
+      $this->originalUrls[$variable] = $GLOBALS[$variable];
+      $GLOBALS[$variable] = $this->stagingUrl;
+    }
+    $GLOBALS['base_secure_url'] = str_replace('http://', 'https://', $GLOBALS['base_secure_url']);
+
+    // Set to that verbose mode works properly.
+    $this->originalFileDirectory = file_directory_path();
+  }
+
+  /**
+   * Perform and revert actions, then tear down based on what setUp() did.
+   */
+  protected function tearDown() {
+    // Perform all actions as part of the test and revert them.
+    $this->performActions();
+    $this->revertActions();
+
+    // Revert all URL variables to their original values.
+    foreach (self::$URL_VARIABLES as $variable) {
+      $GLOBALS[$variable] = $this->originalUrls[$variable];
+    }
+  }
+
+  /**
+   * Perform all actions listed in the $actions array.
+   */
+  protected function performActions() {
+    foreach ($this->actions as $action) {
+      call_user_func(array($this, 'perform' . ucfirst($action)));
+    }
+  }
+
+  /**
+   * Revert all actions listed in the $actions array.
+   */
+  protected function revertActions() {
+    foreach ($this->actions as $action) {
+      if (method_exists($this, 'revert' . ucfirst($action))) {
+        call_user_func(array($this, 'revert' . ucfirst($action)));
+      }
+    }
+  }
+
+  /**
+   * Set the user agent to Drupal.
+   */
+  protected function curlInitialize() {
+    parent::curlInitialize();
+    curl_setopt($this->curlHandle, CURLOPT_USERAGENT, 'Drupal (+http://drupal.org/)');
+  }
+
+  /**
+   * Temporarily revert the global URL variables so verbose links will print.
+   */
+  protected function verbose($message) {
+    if ($this->stagingUrl) {
+      foreach (self::$URL_VARIABLES as $variable) {
+        $GLOBALS[$variable] = $this->originalUrls[$variable];
+      }
+    }
+
+    parent::verbose($message);
+
+    if ($this->stagingUrl) {
+      foreach (self::$URL_VARIABLES as $variable) {
+        $GLOBALS[$variable] = $this->stagingUrl;
+      }
+      $GLOBALS['base_secure_url'] = str_replace('http://', 'https://', $GLOBALS['base_secure_url']);
+    }
+  }
 }
 
 /**

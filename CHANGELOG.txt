@@ -26,3 +26,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Merge changes from Drupal 7 core.
    * Make alert() message more logical.
    * Post merge fix.
+   * Modified versions of #666956 and #758662.
