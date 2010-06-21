@@ -3104,6 +3104,11 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
   protected static $URL_VARIABLES = array('base_url', 'base_secure_url', 'base_insecure_url');
 
   /**
+   * Prefix to be added to all random strings.
+   */
+  protected static $REMOTE_PREFIX;
+
+  /**
    * URL of the remote server.
    *
    * @var string
@@ -3125,11 +3130,6 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
   protected $actions = array();
 
   /**
-   * Prefix to be added to all random strings.
-   */
-  protected $remotePrefix;
-
-  /**
    * Determine when to run against remote environment.
    */
   protected function setUp() {
@@ -3147,7 +3147,7 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
     $this->originalFileDirectory = file_directory_path();
 
     // Generate unique remote prefix.
-    $this->remotePrefix = 'test' . mt_rand(100, 1000);
+    self::$REMOTE_PREFIX = 'test' . mt_rand(100, 1000);
   }
 
   /**
@@ -3196,14 +3196,14 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
    * Add remote prefix.
    */
   public static function randomName($length = 8) {
-    return $this->remotePrefix . parent::randomName($length);
+    return self::$REMOTE_PREFIX . parent::randomName($length);
   }
 
   /**
    * Add remote prefix.
    */
   public static function randomString($length = 8) {
-    return $this->remotePrefix . parent::randomString($length);
+    return self::$REMOTE_PREFIX . parent::randomString($length);
   }
 
   /**
