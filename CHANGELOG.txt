@@ -28,3 +28,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Post merge fix.
    * Modified versions of #666956 and #758662.
    * Add setting field for remote_url and change all working from staging to remote.
+   * Add remote prefix to all randomly generated strings.

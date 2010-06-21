@@ -3125,6 +3125,11 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
   protected $actions = array();
 
   /**
+   * Prefix to be added to all random strings.
+   */
+  protected $remotePrefix;
+
+  /**
    * Determine when to run against remote environment.
    */
   protected function setUp() {
@@ -3140,6 +3145,9 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
 
     // Set to that verbose mode works properly.
     $this->originalFileDirectory = file_directory_path();
+
+    // Generate unique remote prefix.
+    $this->remotePrefix = 'test' . mt_rand(100, 1000);
   }
 
   /**
@@ -3182,6 +3190,20 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
   protected function curlInitialize() {
     parent::curlInitialize();
     curl_setopt($this->curlHandle, CURLOPT_USERAGENT, 'Drupal (+http://drupal.org/)');
+  }
+
+  /**
+   * Add remote prefix.
+   */
+  public static function randomName($length = 8) {
+    return $this->remotePrefix . parent::randomName($length);
+  }
+
+  /**
+   * Add remote prefix.
+   */
+  public static function randomString($length = 8) {
+    return $this->remotePrefix . parent::randomString($length);
   }
 
   /**
