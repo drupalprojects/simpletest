@@ -36,6 +36,7 @@ function simpletest_menu() {
     'description' => 'Run tests against Drupal core and your active modules. These tests help assure that your site code is working as designed.',
     'access arguments' => array('administer unit tests'),
     'file' => 'simpletest.pages.inc',
+    'weight' => -5,
   );
   $items['admin/config/development/testing/list'] = array(
     'title' => 'List',
@@ -68,7 +69,7 @@ function simpletest_permission() {
   return array(
     'administer unit tests' => array(
       'title' => t('Administer tests'),
-      'description' => theme('placeholder', array('text' => t('Warning: Give to trusted roles only; this permission has security implications.'))),
+      'restrict access' => TRUE,
     ),
   );
 }
@@ -165,13 +166,7 @@ function simpletest_run_tests($test_list, $reporter = 'drupal') {
 
   module_invoke_all('test_group_started');
 
-  // Normally, the forms portion of the batch API takes care of calling
-  // batch_process(), but in the process it saves the whole $form into the
-  // database (which is huge for the test selection form).
-  // By calling batch_process() directly, we skip that behavior and ensure
-  // that we don't exceed the size of data that can be sent to the database
-  // (max_allowed_packet on MySQL).
-  batch_process('admin/config/development/testing/results/' . $test_id);
+  return $test_id;
 }
 
 /**
@@ -241,7 +236,7 @@ function _simpletest_batch_finished($success, $results, $operations, $elapsed) {
 
 
     drupal_set_message(t('The test run did not successfully finish.'), 'error');
-    drupal_set_message(t('Please use the <em>Clean environment</em> button to clean-up temporary files and tables.'), 'warning');
+    drupal_set_message(t('Use the <em>Clean environment</em> button to clean-up temporary files and tables.'), 'warning');
   }
   module_invoke_all('test_group_finished');
 }
@@ -368,6 +363,8 @@ function simpletest_test_get_all() {
         uksort($tests, 'strnatcasecmp');
       }
 
+      // Allow modules extending core tests to disable originals.
+      drupal_alter('simpletest', $groups);
       cache_set('simpletest', $groups);
     }
   }
@@ -406,6 +403,35 @@ function simpletest_registry_files_alter(&$files, $modules) {
       }
     }
   }
+}
+
+/**
+ * Generate test file.
+ */
+function simpletest_generate_file($filename, $width, $lines, $type = 'binary-text') {
+  $size = $width * $lines - $lines;
+
+  // Generate random text
+  $text = '';
+  for ($i = 0; $i < $size; $i++) {
+    switch ($type) {
+      case 'text':
+        $text .= chr(rand(32, 126));
+        break;
+      case 'binary':
+        $text .= chr(rand(0, 31));
+        break;
+      case 'binary-text':
+      default:
+        $text .= rand(0, 1);
+        break;
+    }
+  }
+  $text = wordwrap($text, $width - 1, "\n", TRUE) . "\n"; // Add \n for symetrical file.
+
+  // Create filename.
+  file_put_contents(file_directory_path() . '/' . $filename . '.txt', $text);
+  return $filename;
 }
 
 /**

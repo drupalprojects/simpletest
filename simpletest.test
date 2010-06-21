@@ -57,7 +57,8 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
       $this->drupalGet($base_url . '/install.php', array('external' => TRUE));
       $this->assertResponse(403, 'Cannot access install.php with a "simpletest" user-agent header.');
 
-      $this->drupalLogin($this->drupalCreateUser());
+      $user = $this->drupalCreateUser();
+      $this->drupalLogin($user);
       $headers = $this->drupalGetHeaders(TRUE);
       $this->assertEqual(count($headers), 2, t('There was one intermediate request.'));
       $this->assertTrue(strpos($headers[0][':status'], '302') !== FALSE, t('Intermediate response code was 302.'));
@@ -65,6 +66,17 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
       $this->assertEqual($this->getUrl(), $headers[0]['location'], t('HTTP redirect was followed'));
       $this->assertFalse($this->drupalGetHeader('Location'), t('Headers from intermediate request were reset.'));
       $this->assertResponse(200, t('Response code from intermediate request was reset.'));
+
+      // Test the maximum redirection option.
+      $this->drupalLogout();
+      $edit = array(
+        'name' => $user->name,
+        'pass' => $user->pass_raw
+      );
+      variable_set('simpletest_maximum_redirects', 1);
+      $this->drupalPost('user?destination=user/logout', $edit, t('Log in'));
+      $headers = $this->drupalGetHeaders(TRUE);
+      $this->assertEqual(count($headers), 2, t('Simpletest stopped following redirects after the first one.'));
     }
   }
 
@@ -211,11 +223,11 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
     if ($this->parse()) {
       if ($fieldset = $this->getResultFieldSet()) {
         // Code assumes this is the only test in group.
-        $results['summary'] = $this->asText($fieldset->div[1]);
+        $results['summary'] = $this->asText($fieldset->div->div[1]);
         $results['name'] = $this->asText($fieldset->legend);
 
         $results['assertions'] = array();
-        $tbody = $fieldset->table->tbody;
+        $tbody = $fieldset->div->table->tbody;
         foreach ($tbody->tr as $row) {
           $assertion = array();
           $assertion['message'] = $this->asText($row->td[0]);
@@ -234,8 +246,6 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
 
   /**
    * Get the fieldset containing the results for group this test is in.
-   *
-   * @return fieldset containing the results for group this test is in.
    */
   protected function getResultFieldSet() {
     $fieldsets = $this->xpath('//fieldset');
@@ -274,7 +284,7 @@ class SimpleTestFunctionalTest extends DrupalWebTestCase {
 }
 
 /**
- * Test internal testing framework URL handling.
+ * Test internal testing framework browser.
  */
 class SimpleTestURLTestCase extends DrupalWebTestCase {
 
@@ -284,6 +294,11 @@ class SimpleTestURLTestCase extends DrupalWebTestCase {
       'description' => 'Test the URL handling in the testing framework.',
       'group' => 'SimpleTest',
     );
+  }
+
+  function setUp() {
+    parent::setUp();
+    variable_set('user_register', USER_REGISTER_VISITORS);
   }
 
   /**
@@ -308,6 +323,28 @@ class SimpleTestURLTestCase extends DrupalWebTestCase {
     $absolute = url($url, array('absolute' => TRUE));
     $this->assertEqual($absolute, $this->url, t('Passed and requested URL are equal.'));
     $this->assertEqual($this->url, $this->getAbsoluteUrl($this->url), t('Requested and returned absolute URL are equal.'));
+  }
+
+  /**
+   * Tests XPath escaping.
+   */
+  function testXPathEscaping() {
+    $testpage = <<< EOF
+<html>
+<body>
+<a href="link1">A "weird" link, just to bother the dumb "XPath 1.0"</a>
+<a href="link2">A second "even more weird" link, in memory of George O'Malley</a>
+</body>
+</html>
+EOF;
+    $this->drupalSetContent($testpage);
+
+    // Matches the first link.
+    $urls = $this->xpath('//a[text()=:text]', array(':text' => 'A "weird" link, just to bother the dumb "XPath 1.0"'));
+    $this->assertEqual($urls[0]['href'], 'link1', 'Match with quotes.');
+
+    $urls = $this->xpath('//a[text()=:text]', array(':text' => 'A second "even more weird" link, in memory of George O\'Malley'));
+    $this->assertEqual($urls[0]['href'], 'link2', 'Match with mixed single and double quotes.');
   }
 }
 
@@ -386,13 +423,33 @@ class SimpleTestMailCaptureTestCase extends DrupalWebTestCase {
 }
 
 /**
+ * Test Folder creation
+ */
+class SimpleTestFolderTestCase extends DrupalWebTestCase {
+  public static function getInfo() {
+    return array(
+      'name' => 'Testing SimpleTest setUp',
+      'description' => "This test will check SimpleTest's treatment of hook_install during setUp.  Image module is used for test.",
+      'group' => 'SimpleTest',
+    );
+  }
+
+  function testFolderSetup() {
+    if (module_exists('image')) {
+      $path = file_directory_path() . '/styles';
+      $this->assertTrue(file_prepare_directory($path, FALSE), "Directory created.");
+    }
+  }
+}
+
+/**
  * Test required modules for tests.
  */
 class SimpleTestMissingDependentModuleUnitTest extends DrupalUnitTestCase {
 
   public static function getInfo() {
     return array(
-      'title' => 'Dependent module test',
+      'name' => 'Dependent module test',
       'description' => 'This test should not load since it requires a module that is not found.',
       'group' => 'SimpleTest',
       'dependencies' => array('simpletest_missing_module'),
