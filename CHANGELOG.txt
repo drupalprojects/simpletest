@@ -30,3 +30,4 @@ SimpleTest 7.x-2.x, xxxx-xx-xx (development version)
    * Add setting field for remote_url and change all working from staging to remote.
    * Add remote prefix to all randomly generated strings.
    * Change function_get_args() to func_get_args().
+   * Add setUrl() and resetUrl() to DrupalRemoteTestCase.

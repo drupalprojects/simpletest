@@ -3193,6 +3193,25 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Set the remote URL base.
+   *
+   * @param $url
+   *   Base of the remote URL, for example: http://example.com
+   */
+  protected function setUrl($url) {
+    $this->tearDown();
+    $this->remoteUrl = $url;
+    $this->setUp();
+  }
+
+  /**
+   * Reset the remote URL base to the value in 'simpletest_remote_url'.
+   */
+  protected function resetUrl() {
+    $this->setUrl(variable_get('simpletest_remote_url', FALSE));
+  }
+
+  /**
    * Add remote prefix.
    */
   public static function randomName($length = 8) {
