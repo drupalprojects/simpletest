@@ -3133,7 +3133,7 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
    * Determine when to run against remote environment.
    */
   protected function setUp() {
-    if (!($this->remoteUrl = variable_get('simpletest_remote_url', FALSE))) {
+    if (!$this->remoteUrl && !($this->remoteUrl = variable_get('simpletest_remote_url', FALSE))) {
       $this->remoteUrl = url('', array('absolute' => TRUE));
     }
     // Point the internal browser to the staging site.
