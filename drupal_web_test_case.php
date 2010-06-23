@@ -3199,9 +3199,11 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
    *   Base of the remote URL, for example: http://example.com
    */
   protected function setUrl($url) {
+    $prefix = self::$REMOTE_PREFIX;
     $this->tearDown();
     $this->remoteUrl = $url;
     $this->setUp();
+    self::$REMOTE_PREFIX = $prefix;
   }
 
   /**
