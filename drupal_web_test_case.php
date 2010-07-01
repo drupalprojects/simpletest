@@ -1189,7 +1189,7 @@ class DrupalWebTestCase extends DrupalTestCase {
     $test_info['test_run_id'] = $this->databasePrefix;
     $test_info['in_child_site'] = FALSE;
 
-    $this->setUpInstall(func_get_args());
+    $this->setUpInstall(func_get_args(), $public_files_directory, $private_files_directory, $temp_files_directory);
 
     // Rebuild caches.
     drupal_static_reset();
@@ -1229,7 +1229,7 @@ class DrupalWebTestCase extends DrupalTestCase {
   /**
    * Perform Drupal installation.
    */
-  protected function setUpInstall(array $modules) {
+  protected function setUpInstall(array $modules, $public_files_directory, $private_files_directory, $temp_files_directory) {
     include_once DRUPAL_ROOT . '/includes/install.inc';
     drupal_install_system();
 
