@@ -2,6 +2,18 @@
 // $Id$
 
 /**
+ * Global variable that holds information about the tests being run.
+ *
+ * An array, with the following keys:
+ *  - 'test_run_id': the ID of the test being run, in the form 'simpletest_%"
+ *  - 'in_child_site': TRUE if the current request is a cURL request from
+ *     the parent site.
+ *
+ * @var array
+ */
+global $drupal_test_info;
+
+/**
  * @file
  * Provides DrupalTestCase, DrupalUnitTestCase, and DrupalWebTestCase classes.
  */
@@ -20,11 +32,11 @@ abstract class DrupalTestCase {
   protected $testId;
 
   /**
-   * The original database prefix, before it was changed for testing purposes.
+   * The database prefix of this test run.
    *
    * @var string
    */
-  protected $originalPrefix = NULL;
+  protected $databasePrefix = NULL;
 
   /**
    * The original file directory, before it was changed for testing purposes.
@@ -95,8 +107,6 @@ abstract class DrupalTestCase {
    *   is the caller function itself.
    */
   protected function assert($status, $message = '', $group = 'Other', array $caller = NULL) {
-    global $db_prefix;
-
     // Convert boolean status to string status.
     if (is_bool($status)) {
       $status = $status ? 'pass' : 'fail';
@@ -109,10 +119,6 @@ abstract class DrupalTestCase {
     if (!$caller) {
       $caller = $this->getAssertionCall();
     }
-
-    // Switch to non-testing database to store results in.
-    $current_db_prefix = $db_prefix;
-    $db_prefix = $this->originalPrefix;
 
     // Creation assertion array that can be displayed while tests are running.
     $this->assertions[] = $assertion = array(
@@ -127,12 +133,11 @@ abstract class DrupalTestCase {
     );
 
     // Store assertion for display after the test has completed.
-    db_insert('simpletest')
+    Database::getConnection('default', 'simpletest_original_default')
+      ->insert('simpletest')
       ->fields($assertion)
       ->execute();
 
-    // Return to testing prefix.
-    $db_prefix = $current_db_prefix;
     // We do not use a ternary operator here to allow a breakpoint on
     // test failure.
     if ($status == 'pass') {
@@ -565,10 +570,9 @@ class DrupalUnitTestCase extends DrupalTestCase {
   }
 
   protected function setUp() {
-    global $db_prefix, $conf;
+    global $conf;
 
-    // Store necessary current values before switching to prefixed database.
-    $this->originalPrefix = $db_prefix;
+    // Store necessary current values before switching to the test environment.
     $this->originalFileDirectory = file_directory_path();
 
     spl_autoload_register('db_autoload');
@@ -577,11 +581,21 @@ class DrupalUnitTestCase extends DrupalTestCase {
     drupal_static_reset();
 
     // Generate temporary prefixed database to ensure that tests have a clean starting point.
-    $db_prefix = Database::getConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
-    $conf['file_public_path'] = $this->originalFileDirectory . '/' . $db_prefix;
+    $this->databasePrefix = Database::getConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
+    $conf['file_public_path'] = $this->originalFileDirectory . '/' . $this->databasePrefix;
+
+    // Clone the current connection and replace the current prefix.
+    $connection_info = Database::getConnectionInfo('default');
+    Database::renameConnection('default', 'simpletest_original_default');
+    foreach ($connection_info as $target => $value) {
+      $connection_info[$target]['prefix'] = array(
+        'default' => $value['prefix']['default'] . $this->databasePrefix,
+      );
+    }
+    Database::addConnectionInfo('default', 'default', $connection_info['default']);
 
     // Set user agent to be consistent with web test case.
-    $_SERVER['HTTP_USER_AGENT'] = $db_prefix;
+    $_SERVER['HTTP_USER_AGENT'] = $this->databasePrefix;
 
     // If locale is enabled then t() will try to access the database and
     // subsequently will fail as the database is not accessible.
@@ -594,15 +608,16 @@ class DrupalUnitTestCase extends DrupalTestCase {
   }
 
   protected function tearDown() {
-    global $db_prefix, $conf;
-    if (preg_match('/simpletest\d+/', $db_prefix)) {
-      $conf['file_public_path'] = $this->originalFileDirectory;
-      // Return the database prefix to the original.
-      $db_prefix = $this->originalPrefix;
-      // Restore modules if necessary.
-      if (isset($this->originalModuleList)) {
-        module_list(TRUE, FALSE, FALSE, $this->originalModuleList);
-      }
+    global $conf;
+
+    // Get back to the original connection.
+    Database::removeConnection('default');
+    Database::renameConnection('simpletest_original_default', 'default');
+
+    $conf['file_public_path'] = $this->originalFileDirectory;
+    // Restore modules if necessary.
+    if (isset($this->originalModuleList)) {
+      module_list(TRUE, FALSE, FALSE, $this->originalModuleList);
     }
   }
 }
@@ -1091,7 +1106,8 @@ class DrupalWebTestCase extends DrupalTestCase {
     // Make a request to the logout page, and redirect to the user page, the
     // idea being if you were properly logged out you should be seeing a login
     // screen.
-    $this->drupalGet('user/logout', array('query' => array('destination' => 'user')));
+    $this->drupalGet('user/logout');
+    $this->drupalGet('user');
     $pass = $this->assertField('name', t('Username field found.'), t('Logout'));
     $pass = $pass && $this->assertField('pass', t('Password field found.'), t('Logout'));
 
@@ -1112,12 +1128,28 @@ class DrupalWebTestCase extends DrupalTestCase {
    *   either a single array or a variable number of string arguments.
    */
   protected function setUp() {
-    global $db_prefix, $user, $language, $conf;
+    global $user, $language, $conf;
+
+    // Generate a temporary prefixed database to ensure that tests have a clean starting point.
+    $this->databasePrefix = 'simpletest' . mt_rand(1000, 1000000);
+    db_update('simpletest_test_id')
+      ->fields(array('last_prefix' => $this->databasePrefix))
+      ->condition('test_id', $this->testId)
+      ->execute();
+
+    // Clone the current connection and replace the current prefix.
+    $connection_info = Database::getConnectionInfo('default');
+    Database::renameConnection('default', 'simpletest_original_default');
+    foreach ($connection_info as $target => $value) {
+      $connection_info[$target]['prefix'] = array(
+        'default' => $value['prefix']['default'] . $this->databasePrefix,
+      );
+    }
+    Database::addConnectionInfo('default', 'default', $connection_info['default']);
 
     // Store necessary current values before switching to prefixed database.
     $this->originalLanguage = $language;
     $this->originalLanguageDefault = variable_get('language_default');
-    $this->originalPrefix = $db_prefix;
     $this->originalFileDirectory = file_directory_path();
     $this->originalProfile = drupal_get_profile();
     $this->removeTables = variable_get('simpletest_remove_tables', TRUE);
@@ -1131,18 +1163,10 @@ class DrupalWebTestCase extends DrupalTestCase {
     $this->originalShutdownCallbacks = $callbacks;
     $callbacks = array();
 
-    // Generate temporary prefixed database to ensure that tests have a clean starting point.
-    $db_prefix_new = Database::getConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
-    db_update('simpletest_test_id')
-      ->fields(array('last_prefix' => $db_prefix_new))
-      ->condition('test_id', $this->testId)
-      ->execute();
-    $db_prefix = $db_prefix_new;
-
     // Create test directory ahead of installation so fatal errors and debug
     // information can be logged during installation process.
     // Use temporary files directory with the same prefix as the database.
-    $public_files_directory  = $this->originalFileDirectory . '/simpletest/' . substr($db_prefix, 10);
+    $public_files_directory  = $this->originalFileDirectory . '/simpletest/' . substr($this->databasePrefix, 10);
     $private_files_directory = $public_files_directory . '/private';
     $temp_files_directory    = $private_files_directory . '/temp';
 
@@ -1159,6 +1183,11 @@ class DrupalWebTestCase extends DrupalTestCase {
     // Reset all statics and variables to perform tests in a clean environment.
     $conf = array();
     drupal_static_reset();
+
+    // Set the test information for use in other parts of Drupal.
+    $test_info = &$GLOBALS['drupal_test_info'];
+    $test_info['test_run_id'] = $this->databasePrefix;
+    $test_info['in_child_site'] = FALSE;
 
     $this->setUpInstall(func_get_args());
 
@@ -1250,8 +1279,9 @@ class DrupalWebTestCase extends DrupalTestCase {
    * setup a clean environment for the current test run.
    */
   protected function preloadRegistry() {
-    db_query('INSERT INTO {registry} SELECT * FROM ' . $this->originalPrefix . 'registry');
-    db_query('INSERT INTO {registry_file} SELECT * FROM ' . $this->originalPrefix . 'registry_file');
+    $original_connection = Database::getConnection('default', 'simpletest_original_default');
+    db_query('INSERT INTO {registry} SELECT * FROM ' . $original_connection->prefixTables('{registry}'));
+    db_query('INSERT INTO {registry_file} SELECT * FROM ' . $original_connection->prefixTables('{registry_file}'));
   }
 
   /**
@@ -1277,14 +1307,11 @@ class DrupalWebTestCase extends DrupalTestCase {
    * and reset the database prefix.
    */
   protected function tearDown() {
-    global $db_prefix, $user, $language;
+    global $user, $language;
 
     // In case a fatal error occured that was not in the test process read the
     // log to pick up any fatal errors.
-    $db_prefix_temp = $db_prefix;
-    $db_prefix = $this->originalPrefix;
-    simpletest_log_read($this->testId, $db_prefix, get_class($this), TRUE);
-    $db_prefix = $db_prefix_temp;
+    simpletest_log_read($this->testId, $this->databasePrefix, get_class($this), TRUE);
 
     $emailCount = count(variable_get('drupal_test_email_collector', array()));
     if ($emailCount) {
@@ -1292,54 +1319,52 @@ class DrupalWebTestCase extends DrupalTestCase {
       $this->pass($message, t('E-mail'));
     }
 
-    if (preg_match('/simpletest\d+/', $db_prefix)) {
-      // Delete temporary files directory.
-      file_unmanaged_delete_recursive($this->originalFileDirectory . '/simpletest/' . substr($db_prefix, 10));
+    // Delete temporary files directory.
+    file_unmanaged_delete_recursive($this->originalFileDirectory . '/simpletest/' . substr($this->databasePrefix, 10));
 
-      if ($this->removeTables) {
-        // Remove all prefixed tables (all the tables in the schema).
-        $schema = drupal_get_schema(NULL, TRUE);
-        foreach ($schema as $name => $table) {
-          db_drop_table($name);
-        }
-      }
-
-      // Return the database prefix to the original.
-      $db_prefix = $this->originalPrefix;
-
-      // Restore original shutdown callbacks array to prevent original
-      // environment of calling handlers from test run.
-      $callbacks = &drupal_register_shutdown_function();
-      $callbacks = $this->originalShutdownCallbacks;
-
-      // Return the user to the original one.
-      $user = $this->originalUser;
-      drupal_save_session(TRUE);
-
-      // Ensure that internal logged in variable and cURL options are reset.
-      $this->loggedInUser = FALSE;
-      $this->additionalCurlOptions = array();
-
-      // Reload module list and implementations to ensure that test module hooks
-      // aren't called after tests.
-      module_list(TRUE);
-      module_implements('', FALSE, TRUE);
-
-      // Reset the Field API.
-      field_cache_clear();
-
-      // Rebuild caches.
-      $this->refreshVariables();
-
-      // Reset language.
-      $language = $this->originalLanguage;
-      if ($this->originalLanguageDefault) {
-        $GLOBALS['conf']['language_default'] = $this->originalLanguageDefault;
-      }
-
-      // Close the CURL handler.
-      $this->curlClose();
+    // Remove all prefixed tables (all the tables in the schema).
+    $schema = drupal_get_schema(NULL, TRUE);
+    $ret = array();
+    foreach ($schema as $name => $table) {
+      db_drop_table($name);
     }
+
+    // Get back to the original connection.
+    Database::removeConnection('default');
+    Database::renameConnection('simpletest_original_default', 'default');
+
+    // Restore original shutdown callbacks array to prevent original
+    // environment of calling handlers from test run.
+    $callbacks = &drupal_register_shutdown_function();
+    $callbacks = $this->originalShutdownCallbacks;
+
+    // Return the user to the original one.
+    $user = $this->originalUser;
+    drupal_save_session(TRUE);
+
+    // Ensure that internal logged in variable and cURL options are reset.
+    $this->loggedInUser = FALSE;
+    $this->additionalCurlOptions = array();
+
+    // Reload module list and implementations to ensure that test module hooks
+    // aren't called after tests.
+    module_list(TRUE);
+    module_implements('', FALSE, TRUE);
+
+    // Reset the Field API.
+    field_cache_clear();
+
+    // Rebuild caches.
+    $this->refreshVariables();
+
+    // Reset language.
+    $language = $this->originalLanguage;
+    if ($this->originalLanguageDefault) {
+      $GLOBALS['conf']['language_default'] = $this->originalLanguageDefault;
+    }
+
+    // Close the CURL handler.
+    $this->curlClose();
   }
 
   /**
@@ -1351,7 +1376,7 @@ class DrupalWebTestCase extends DrupalTestCase {
    * See the description of $curl_options for other options.
    */
   protected function curlInitialize() {
-    global $base_url, $db_prefix;
+    global $base_url;
 
     if (!isset($this->curlHandle)) {
       $this->curlHandle = curl_init();
@@ -1363,6 +1388,7 @@ class DrupalWebTestCase extends DrupalTestCase {
         CURLOPT_SSL_VERIFYPEER => FALSE, // Required to make the tests run on https.
         CURLOPT_SSL_VERIFYHOST => FALSE, // Required to make the tests run on https.
         CURLOPT_HEADERFUNCTION => array(&$this, 'curlHeaderCallback'),
+        CURLOPT_USERAGENT => $this->databasePrefix,
       );
       if (isset($this->httpauth_credentials)) {
         $curl_options[CURLOPT_HTTPAUTH] = $this->httpauth_method;
@@ -1375,7 +1401,7 @@ class DrupalWebTestCase extends DrupalTestCase {
     }
     // We set the user agent header on each request so as to use the current
     // time and a new uniqid.
-    if (preg_match('/simpletest\d+/', $db_prefix, $matches)) {
+    if (preg_match('/simpletest\d+/', $this->databasePrefix, $matches)) {
       curl_setopt($this->curlHandle, CURLOPT_USERAGENT, drupal_generate_test_ua($matches[0]));
     }
   }
@@ -2959,7 +2985,9 @@ class DrupalWebTestCase extends DrupalTestCase {
   }
 
   /**
-   * Assert that the most recently sent e-mail message has a field with the given value.
+   * Asserts that the most recently sent e-mail message has the given value.
+   *
+   * The field in $name must have the content described in $value.
    *
    * @param $name
    *   Name of field or message property to assert. Examples: subject, body, id, ...
@@ -2967,6 +2995,7 @@ class DrupalWebTestCase extends DrupalTestCase {
    *   Value of the field to assert.
    * @param $message
    *   Message to display.
+   *
    * @return
    *   TRUE on pass, FALSE on fail.
    */
@@ -2977,13 +3006,76 @@ class DrupalWebTestCase extends DrupalTestCase {
   }
 
   /**
-   * Log verbose message in a text file.
+   * Asserts that the most recently sent e-mail message has the string in it.
+   *
+   * @param $field_name
+   *   Name of field or message property to assert: subject, body, id, ...
+   * @param $string
+   *   String to search for.
+   * @param $email_depth
+   *   Number of emails to search for string, starting with most recent.
+   *
+   * @return
+   *   TRUE on pass, FALSE on fail.
+   */
+  protected function assertMailString($field_name, $string, $email_depth) {
+    $mails = $this->drupalGetMails();
+    $string_found = FALSE;
+    for ($i = sizeof($mails) -1; $i >= sizeof($mails) - $email_depth && $i >= 0; $i--) {
+      $mail = $mails[$i];
+      // Normalize whitespace, as we don't know what the mail system might have
+      // done. Any run of whitespace becomes a single space.
+      $normalized_mail = preg_replace('/\s+/', ' ', $mail[$field_name]);
+      $normalized_string = preg_replace('/\s+/', ' ', $string);
+      $string_found = (FALSE !== strpos($normalized_mail, $normalized_string));
+      if ($string_found) {
+        break;
+      }
+    }
+    return $this->assertTrue($string_found, t('Expected text found in @field of email message: "@expected".', array('@field' => $field_name, '@expected' => $string)));
+  }
+
+  /**
+   * Asserts that the most recently sent e-mail message has the pattern in it.
+   *
+   * @param $field_name
+   *   Name of field or message property to assert: subject, body, id, ...
+   * @param $regex
+   *   Pattern to search for.
+   *
+   * @return
+   *   TRUE on pass, FALSE on fail.
+   */
+  protected function assertMailPattern($field_name, $regex, $message) {
+    $mails = $this->drupalGetMails();
+    $mail = end($mails);
+    $regex_found = preg_match("/$regex/", $mail[$field_name]);
+    return $this->assertTrue($regex_found, t('Expected text found in @field of email message: "@expected".', array('@field' => $field_name, '@expected' => $regex)));
+  }
+
+  /**
+   * Outputs to verbose the most recent $count emails sent.
+   *
+   * @param $count
+   *   Optional number of emails to output.
+   */
+  protected function verboseEmail($count = 1) {
+    $mails = $this->drupalGetMails();
+    for ($i = sizeof($mails) -1; $i >= sizeof($mails) - $count && $i >= 0; $i--) {
+      $mail = $mails[$i];
+      $this->verbose(t('Email:') . '<pre>' . print_r($mail, TRUE) . '</pre>');
+    }
+  }
+
+  /**
+   * Logs verbose message in a text file.
    *
    * The a link to the vebose message will be placed in the test results via
    * as a passing assertion with the text '[verbose message]'.
    *
    * @param $message
    *   The verbose message to be stored.
+   *
    * @see simpletest_verbose()
    */
   protected function verbose($message) {
@@ -3249,7 +3341,7 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
 }
 
 /**
- * Log verbose message in a text file.
+ * Logs verbose message in a text file.
  *
  * If verbose mode is enabled then page requests will be dumped to a file and
  * presented on the test result screen. The messages will be placed in a file
@@ -3261,8 +3353,10 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
  *   The original file directory, before it was changed for testing purposes.
  * @param $test_class
  *   The active test case class.
+ *
  * @return
  *   The ID of the message to be placed in related assertion messages.
+ *
  * @see DrupalTestCase->originalFileDirectory
  * @see DrupalWebTestCase->verbose()
  */
