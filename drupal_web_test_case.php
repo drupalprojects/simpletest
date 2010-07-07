@@ -3239,7 +3239,7 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
     $this->originalFileDirectory = file_directory_path();
 
     // Generate unique remote prefix.
-    self::$REMOTE_PREFIX = 'test' . mt_rand(100, 1000);
+    self::$REMOTE_PREFIX = 'test' . mt_rand(100, 100000);
 
     // Set the time-limit for the test case.
     drupal_set_time_limit($this->timeLimit);
