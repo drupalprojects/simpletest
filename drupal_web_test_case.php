@@ -3240,6 +3240,9 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
 
     // Generate unique remote prefix.
     self::$REMOTE_PREFIX = 'test' . mt_rand(100, 1000);
+
+    // Set the time-limit for the test case.
+    drupal_set_time_limit($this->timeLimit);
   }
 
   /**
