@@ -3225,6 +3225,44 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
    * Determine when to run against remote environment.
    */
   protected function setUp() {
+    // BEGIN: Excerpt from DrupalUnitTestCase.
+    global $conf;
+
+    // Set to that verbose mode works properly.
+    $this->originalFileDirectory = file_directory_path();
+
+    spl_autoload_register('db_autoload');
+
+    // Reset all statics so that test is performed with a clean environment.
+    drupal_static_reset();
+
+    // Generate temporary prefixed database to ensure that tests have a clean starting point.
+    $this->databasePrefix = Database::getConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
+    $conf['file_public_path'] = $this->originalFileDirectory . '/' . $this->databasePrefix;
+
+    // Clone the current connection and replace the current prefix.
+    $connection_info = Database::getConnectionInfo('default');
+    Database::renameConnection('default', 'simpletest_original_default');
+    foreach ($connection_info as $target => $value) {
+      $connection_info[$target]['prefix'] = array(
+        'default' => $value['prefix']['default'] . $this->databasePrefix,
+      );
+    }
+    Database::addConnectionInfo('default', 'default', $connection_info['default']);
+
+    // Set user agent to be consistent with web test case.
+    $_SERVER['HTTP_USER_AGENT'] = $this->databasePrefix;
+
+    // If locale is enabled then t() will try to access the database and
+    // subsequently will fail as the database is not accessible.
+    $module_list = module_list();
+    if (isset($module_list['locale'])) {
+      $this->originalModuleList = $module_list;
+      unset($module_list['locale']);
+      module_list(TRUE, FALSE, FALSE, $module_list);
+    }
+    // END: Excerpt from DrupalUnitTestCase.
+
     if (!$this->remoteUrl && !($this->remoteUrl = variable_get('simpletest_remote_url', FALSE))) {
       $this->remoteUrl = url('', array('absolute' => TRUE));
     }
@@ -3234,9 +3272,6 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
       $GLOBALS[$variable] = $this->remoteUrl;
     }
     $GLOBALS['base_secure_url'] = str_replace('http://', 'https://', $GLOBALS['base_secure_url']);
-
-    // Set to that verbose mode works properly.
-    $this->originalFileDirectory = file_directory_path();
 
     // Generate unique remote prefix.
     self::$REMOTE_PREFIX = 'test' . mt_rand(100, 100000);
@@ -3257,6 +3292,20 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
     foreach (self::$URL_VARIABLES as $variable) {
       $GLOBALS[$variable] = $this->originalUrls[$variable];
     }
+
+    // BEGIN: Excerpt from DrupalUnitTestCase.
+    global $conf;
+
+    // Get back to the original connection.
+    Database::removeConnection('default');
+    Database::renameConnection('simpletest_original_default', 'default');
+
+    $conf['file_public_path'] = $this->originalFileDirectory;
+    // Restore modules if necessary.
+    if (isset($this->originalModuleList)) {
+      module_list(TRUE, FALSE, FALSE, $this->originalModuleList);
+    }
+    // END: Excerpt from DrupalUnitTestCase.
   }
 
   /**
