@@ -3239,8 +3239,8 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
 //     // BEGIN: Excerpt from DrupalUnitTestCase.
 //     global $conf;
 //
-//     // Set to that verbose mode works properly.
-//     $this->originalFileDirectory = file_directory_path();
+    // Set to that verbose mode works properly.
+    $this->originalFileDirectory = file_directory_path();
 //
 //     spl_autoload_register('db_autoload');
 //
@@ -3304,14 +3304,14 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
       $GLOBALS[$variable] = $this->originalUrls[$variable];
     }
 
-//     // BEGIN: Excerpt from DrupalUnitTestCase.
-//     global $conf;
-//
+    // BEGIN: Excerpt from DrupalUnitTestCase.
+    global $conf;
+
     // Get back to the original connection.
     Database::removeConnection('default');
     Database::renameConnection('simpletest_original_default', 'default');
-//
-//     $conf['file_public_path'] = $this->originalFileDirectory;
+
+    $conf['file_public_path'] = $this->originalFileDirectory;
 //     // Restore modules if necessary.
 //     if (isset($this->originalModuleList)) {
 //       module_list(TRUE, FALSE, FALSE, $this->originalModuleList);
