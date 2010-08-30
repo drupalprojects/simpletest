@@ -3251,15 +3251,15 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
 //     $this->databasePrefix = Database::getConnection()->prefixTables('{simpletest' . mt_rand(1000, 1000000) . '}');
 //     $conf['file_public_path'] = $this->originalFileDirectory . '/' . $this->databasePrefix;
 //
-//     // Clone the current connection and replace the current prefix.
-//     $connection_info = Database::getConnectionInfo('default');
-//     Database::renameConnection('default', 'simpletest_original_default');
-//     foreach ($connection_info as $target => $value) {
-//       $connection_info[$target]['prefix'] = array(
-//         'default' => $value['prefix']['default'] . $this->databasePrefix,
-//       );
-//     }
-//     Database::addConnectionInfo('default', 'default', $connection_info['default']);
+    // Clone the current connection and replace the current prefix.
+    $connection_info = Database::getConnectionInfo('default');
+    Database::renameConnection('default', 'simpletest_original_default');
+    foreach ($connection_info as $target => $value) {
+      $connection_info[$target]['prefix'] = array(
+        'default' => $value['prefix']['default'] . $this->databasePrefix,
+      );
+    }
+    Database::addConnectionInfo('default', 'default', $connection_info['default']);
 //
 //     // Set user agent to be consistent with web test case.
 //     $_SERVER['HTTP_USER_AGENT'] = $this->databasePrefix;
@@ -3307,9 +3307,9 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
 //     // BEGIN: Excerpt from DrupalUnitTestCase.
 //     global $conf;
 //
-//     // Get back to the original connection.
-//     Database::removeConnection('default');
-//     Database::renameConnection('simpletest_original_default', 'default');
+    // Get back to the original connection.
+    Database::removeConnection('default');
+    Database::renameConnection('simpletest_original_default', 'default');
 //
 //     $conf['file_public_path'] = $this->originalFileDirectory;
 //     // Restore modules if necessary.
