@@ -3369,6 +3369,13 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
   }
 
   /**
+   * Override to ensure not database activity.
+   */
+  protected function refreshVariables() {
+    // Do nothing.
+  }
+
+  /**
    * Add remote prefix.
    */
   public static function randomName($length = 8) {
