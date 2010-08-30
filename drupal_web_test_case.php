@@ -1272,6 +1272,7 @@ class DrupalWebTestCase extends DrupalTestCase {
     if ($install_profile_module_exists) {
       module_enable(array($this->profile), FALSE);
     }
+  }
 
   /**
    * Set post-installation variables.
