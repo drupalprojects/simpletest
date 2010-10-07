@@ -1,11 +1,11 @@
 Index: modules/system/system.module
 ===================================================================
 RCS file: /cvs/drupal/drupal/modules/system/system.module,v
-retrieving revision 1.862
-diff -u -r1.862 system.module
---- modules/system/system.module  15 Dec 2009 08:45:32 -0000  1.862
-+++ modules/system/system.module  15 Dec 2009 22:54:20 -0000
-@@ -2142,6 +2142,9 @@
+retrieving revision 1.977
+diff -u -p -r1.977 system.module
+--- modules/system/system.module	7 Oct 2010 04:58:45 -0000	1.977
++++ modules/system/system.module	7 Oct 2010 20:42:41 -0000
+@@ -2276,6 +2276,9 @@ function _system_rebuild_module_data() {
    // Install profile hooks are always executed last.
    $modules[$profile]->weight = 1000;
  
