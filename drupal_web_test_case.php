@@ -3418,7 +3418,7 @@ class DrupalRemoteTestCase extends DrupalWebTestCase {
 //     global $conf;
 //
     // Set to that verbose mode works properly.
-    $this->originalFileDirectory = file_directory_path();
+    $this->originalFileDirectory = variable_get('file_public_path', conf_path() . '/files');
 //
 //     spl_autoload_register('db_autoload');
 //
