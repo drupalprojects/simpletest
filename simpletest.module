@@ -30,7 +30,7 @@ function simpletest_help($path, $arg) {
  */
 function simpletest_menu() {
   $items['admin/config/development/testing'] = array(
-    'title' => 'Testing',
+    'title' => 'Testing 2.x',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('simpletest_test_form'),
     'description' => 'Run tests against Drupal core and your active modules. These tests help assure that your site code is working as designed.',

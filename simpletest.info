@@ -9,5 +9,6 @@ files[] = simpletest.install
 files[] = simpletest.test
 files[] = drupal_web_test_case.php
 configure = admin/config/development/testing/settings
+dependencies[] = simpletest_monitor
 
 testing_api = 2.x
