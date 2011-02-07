@@ -583,6 +583,55 @@ abstract class DrupalTestCase {
     }
     return $str;
   }
+
+  /**
+   * Converts a list of possible parameters into a stack of permutations.
+   *
+   * Takes a list of parameters containing possible values, and converts all of
+   * them into a list of items containing every possible permutation.
+   *
+   * Example:
+   * @code
+   * $parameters = array(
+   *   'one' => array(0, 1),
+   *   'two' => array(2, 3),
+   * );
+   * $permutations = $this->permute($parameters);
+   * // Result:
+   * $permutations == array(
+   *   array('one' => 0, 'two' => 2),
+   *   array('one' => 1, 'two' => 2),
+   *   array('one' => 0, 'two' => 3),
+   *   array('one' => 1, 'two' => 3),
+   * )
+   * @endcode
+   *
+   * @param $parameters
+   *   An associative array of parameters, keyed by parameter name, and whose
+   *   values are arrays of parameter values.
+   *
+   * @return
+   *   A list of permutations, which is an array of arrays. Each inner array
+   *   contains the full list of parameters that have been passed, but with a
+   *   single value only.
+   */
+  public static function generatePermutations($parameters) {
+    $all_permutations = array(array());
+    foreach ($parameters as $parameter => $values) {
+      $new_permutations = array();
+      // Iterate over all values of the parameter.
+      foreach ($values as $value) {
+        // Iterate over all existing permutations.
+        foreach ($all_permutations as $permutation) {
+          // Add the new parameter value to existing permutations.
+          $new_permutations[] = $permutation + array($parameter => $value);
+        }
+      }
+      // Replace the old permutations with the new permutations.
+      $all_permutations = $new_permutations;
+    }
+    return $all_permutations;
+  }
 }
 
 /**
@@ -1886,6 +1935,39 @@ class DrupalWebTestCase extends DrupalTestCase {
    * array of commands, to update $this->content using equivalent DOM
    * manipulation as is used by ajax.js. It also returns the array of commands.
    *
+   * @param $path
+   *   Location of the form containing the AJAX enabled element to test. Can be
+   *   either a Drupal path or an absolute path or NULL to use the current page.
+   * @param $edit
+   *   Field data in an associative array. Changes the current input fields
+   *   (where possible) to the values indicated.
+   * @param $triggering_element
+   *   The name of the form element that is responsible for triggering the AJAX
+   *   functionality to test. May be a string or, if the triggering element is
+   *   a button, an associative array where the key is the name of the button
+   *   and the value is the button label. i.e.) array('op' => t('Refresh')).
+   * @param $ajax_path
+   *   (optional) Override the path set by the AJAX settings of the triggering
+   *   element. In the absence of both the triggering element's AJAX path and
+   *   $ajax_path 'system/ajax' will be used.
+   * @param $options
+   *   (optional) Options to be forwarded to url().
+   * @param $headers
+   *   (optional) An array containing additional HTTP request headers, each
+   *   formatted as "name: value". Forwarded to drupalPost().
+   * @param $form_html_id
+   *   (optional) HTML ID of the form to be submitted, use when there is more
+   *   than one identical form on the same page and the value of the triggering
+   *   element is not enough to identify the form. Note this is not the Drupal
+   *   ID of the form but rather the HTML ID of the form.
+   * @param $ajax_settings
+   *   (optional) An array of AJAX settings which if specified will be used in
+   *   place of the AJAX settings of the triggering element.
+   *
+   * @return
+   *   An array of AJAX commands.
+   *
+   * @see drupalPost()
    * @see ajax.js
    */
   protected function drupalPostAJAX($path, $edit, $triggering_element, $ajax_path = NULL, array $options = array(), array $headers = array(), $form_html_id = NULL, $ajax_settings = NULL) {

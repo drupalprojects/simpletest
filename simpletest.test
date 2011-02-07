@@ -3,6 +3,11 @@
 
 /**
  * @file
+ * Tests for simpletest.module.
+ */
+
+/**
+ * @file
  * Provides tests for SimpleTest functionality.
  */
 
