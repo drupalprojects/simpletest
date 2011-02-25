@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function simpletest_help($section) {
   $output = "";
