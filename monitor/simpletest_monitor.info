@@ -1,4 +1,3 @@
-; $Id$
 
 name = Testing API Monitor
 description = Ensure that 2.x style tests are removed when core API is being used.
