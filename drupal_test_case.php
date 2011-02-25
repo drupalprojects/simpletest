@@ -1,5 +1,4 @@
 <?php
-/* $Id$ */
 
 /**
  * Test case for typical Drupal tests.

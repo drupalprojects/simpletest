@@ -1,5 +1,4 @@
 <?php
-/* $Id$ */
 class UploadPictureTests extends DrupalTestCase {
   var $_cleanup_roles = array();
   var $_cleanup_users = array();
