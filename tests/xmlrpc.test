@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class XMLRPCValidator1IncTestCase extends DrupalWebTestCase {
   public static function getInfo() {

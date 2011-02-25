@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 define('FIELD_TEST_ELEMENT_ID', 1);
 define('FIELD_TEST_BUNDLE', 'test_bundle');

@@ -1,4 +1,3 @@
-; $Id$
 name = Browser test
 description = Provide various pages for testing the browser.
 package = Testing
