@@ -1,5 +1,4 @@
 <?php
-/* $Id$ */
 class ProfileModuleTestSingle extends DrupalTestCase {
   function get_info() {
     return array(

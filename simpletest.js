@@ -1,4 +1,3 @@
-// $Id$
 /**
  * Creates a select all checkbox before in every test group fieldset
  */

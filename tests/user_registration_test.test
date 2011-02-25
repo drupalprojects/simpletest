@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * Class to test the user registration process,
  * - based on initial version by Kuba Zygmunt -
