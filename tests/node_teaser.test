@@ -1,5 +1,4 @@
 <?php
-// $Id$
 class NodeTeaserTest extends DrupalTestCase {
   /**
    * Implementation of get_info() for information

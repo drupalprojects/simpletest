@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 class TranslationModuleTestCase extends DrupalTestCase {
   var $book;
