@@ -5,11 +5,6 @@
  * Tests for simpletest.module.
  */
 
-/**
- * @file
- * Provides tests for SimpleTest functionality.
- */
-
 class SimpleTestFunctionalTest extends DrupalWebTestCase {
 
   /**
