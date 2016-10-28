@@ -3443,7 +3443,7 @@ class DrupalCloneTestCase extends DrupalWebTestCase {
     'watchdog',
   );
 
-  protected function setUpInstall() {
+  protected function setUpInstall(array $modules, $public_files_directory, $private_files_directory, $temp_files_directory) {
     global $db_prefix;
 
     // Store new database prefix.
@@ -3467,7 +3467,7 @@ class DrupalCloneTestCase extends DrupalWebTestCase {
     }
   }
 
-  protected function setUpVariables() {
+  protected function setUpVariables($clean_url_original) {
     // Do nothing.
   }
 
