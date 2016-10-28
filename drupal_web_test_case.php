@@ -1336,6 +1336,7 @@ class DrupalWebTestCase extends DrupalTestCase {
    * Perform Drupal installation.
    */
   protected function setUpInstall(array $modules, $public_files_directory, $private_files_directory, $temp_files_directory) {
+    global $user;
     include_once DRUPAL_ROOT . '/includes/install.inc';
     drupal_install_system();
 
