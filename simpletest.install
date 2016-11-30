@@ -167,6 +167,7 @@ function simpletest_schema() {
  * Implements hook_uninstall().
  */
 function simpletest_uninstall() {
+  module_load_include('module', 'simpletest', 'simpletest');
   simpletest_clean_environment();
 
   // Remove settings variables.
